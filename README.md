@@ -10,20 +10,27 @@ Deploys an ec2 bastion instance for running pipelines
 remotely. Also deploys an AWS batch compute environment
 (optional but defaults to `true`).
 
-## Current modules managed by this repo
+Please see CLI documentation for more details on each resource
+deployed, however below is a summary:
 
-| Name            | Description                                                           | Version | Path                                | Platform | Notes |
-|-----------------|-----------------------------------------------------------------------|---------|-------------------------------------|----------|-------|
-| `aws-bootstrap` | Used to deploy ec2 bastion instance and associated pipeline resources | 0.0.1   | [./terraform/modules/aws-bootstrap](terraform/modules/aws-bootstrap/) | aws      |       |
+* ec2 bastion instance
+* (optional) S3 bucket for Nextflow backend
+* IAM policy for instance
+* (optional) AWS Batch compute environment
+* SSH key pair for ssh access and ingress/egress rules for ssh access
 
 ## Tests
 
 * Runs terraform `fmt` and `validate` for basic error checking.
 
+## Usage
+
+todo
+
 ## Devcontainer
 
-This repo contains config to run a devcontainer development environment
-in VS Code. It's highly recommended you use this enclosed devcontainer
+This repo contains config to run a `devcontainer` development environment
+in VS Code. It's highly recommended you use this enclosed `devcontainer`
 when testing or developing this module for a consistent environment.
 
 Please feel free to add any missing tools and submit a PR.
