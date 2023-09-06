@@ -2,10 +2,10 @@ locals {
   instance_tags = merge(var.tags, {
     Name = var.name
   })
-  eip_ip = concat(aws_eip.default.*.public_ip, aws_instance.default.*.public_ip, [""])[0]
+  public_ip = concat(aws_eip.default.*.public_ip aws_instance.default.*.public_ip, [""])[0]
   batch_ingress_cidr_blocks = concat(
     [data.aws_subnet.provided.cidr_block],
-    local.eip_ip,
+    [local.eip_ip],
     var.batch_additional_ingress_cidr_blocks
   )
 }
