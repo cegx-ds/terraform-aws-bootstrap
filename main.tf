@@ -5,7 +5,7 @@ locals {
   public_ip = concat(aws_eip.default.*.public_ip, aws_instance.default.*.public_ip, [""])[0]
   batch_ingress_cidr_blocks = concat(
     [data.aws_subnet.provided.cidr_block],
-    [local.public_ip],
+    ["${local.public_ip}/32"],
     var.batch_additional_ingress_cidr_blocks
   )
 }
