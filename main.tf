@@ -2,7 +2,7 @@ locals {
   instance_tags = merge(var.tags, {
     Name = var.name
   })
-  eip_ip = var.eip_enabled ? ["${aws_eip.default[*].public_ip}/32"] : []
+  eip_ip = var.eip_enabled ? ["${aws_eip.default.*.public_ip}/32"] : []
   batch_ingress_cidr_blocks = concat(
     [data.aws_subnet.provided.cidr_block],
     local.eip_ip,
