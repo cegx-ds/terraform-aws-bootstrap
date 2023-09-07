@@ -1,3 +1,6 @@
+#
+# Copyright (C) 2023 Cambridge Epigenetix. All rights reserved.
+#
 FROM mcr.microsoft.com/devcontainers/base:debian-11
 
 SHELL ["/bin/bash", "-c"]
@@ -38,6 +41,9 @@ RUN sudo apt install -y python3 \
     apt clean -y && \
     rm -rf /var/lib/apt/lists/*
 
+# Install Python packages
+RUN pip install pre-commit
+
 # Install Terraform
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "aarch64" ]; then ARCH=arm64; fi && \
@@ -54,7 +60,7 @@ RUN ARCH=$(uname -m) && \
     mv terraform-docs /usr/local/bin/terraform-docs && \
     rm -rf terraform-docs*
 
-RUN mkdir -p /usr/local/gcloud && \ 
+RUN mkdir -p /usr/local/gcloud && \
     wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-${GCLOUD_CLI_VERSION}-linux-x86_64.tar.gz && \
     tar -C /usr/local/gcloud -xf google-cloud-cli-${GCLOUD_CLI_VERSION}-linux-x86_64.tar.gz && \
     /usr/local/gcloud/google-cloud-sdk/install.sh && \
