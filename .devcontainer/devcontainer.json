@@ -15,7 +15,8 @@
 	},
 	"postCreateCommand": "",
 	"remoteUser": "vscode",
+	"postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
 	"mounts": [
-		"type=bind,source=/Users/${localEnv:USER}/.ssh,target=/home/vscode/.ssh,readonly"
+		"type=bind,source=/Users/${localEnv:USER}/.ssh,target=/home/vscode/.ssh"
 	]
 }
