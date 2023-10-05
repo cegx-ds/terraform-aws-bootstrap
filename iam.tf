@@ -133,6 +133,7 @@ data "aws_iam_policy_document" "main" {
       "batch:DescribeJobs",
       "batch:RegisterJobDefinition",
       "batch:DescribeJobDefinitions",
+      "batch:TagResource",
     ]
 
     resources = [
