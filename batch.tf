@@ -76,14 +76,10 @@ resource "aws_batch_compute_environment" "this" {
       launch_template_id = aws_launch_template.this[count.index].id
     }
 
-    tags = {
-      Terraform = "true"
-    }
+    tags = var.tags
   }
 
-  tags = {
-    Terraform = "true"
-  }
+  tags = var.tags
 }
 
 #
@@ -97,7 +93,5 @@ resource "aws_batch_job_queue" "this" {
   priority             = 1
   compute_environments = [aws_batch_compute_environment.this[count.index].arn]
 
-  tags = {
-    Terraform = "true"
-  }
+  tags = var.tags
 }
