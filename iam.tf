@@ -112,6 +112,9 @@ data "aws_iam_policy_document" "main" {
       "ecr:DescribeImageScanFindings",
       "ecr:CreateRepository",
       "ecr:PutImage",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
     ]
 
     resources = [
