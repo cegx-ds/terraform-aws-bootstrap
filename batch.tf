@@ -62,7 +62,7 @@ resource "aws_batch_compute_environment" "this" {
     max_vcpus           = 256
     desired_vcpus       = 0
     instance_type       = ["optimal"]
-    instance_role       = "arn:aws:iam::${var.account_id}:instance-profile/ecsInstanceRole"
+    instance_role       = "arn:aws:iam::${var.account_id}:instance-profile/${var.name}"
 
     security_group_ids = [
       module.batch_security_group[count.index].security_group_id
