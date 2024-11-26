@@ -227,3 +227,15 @@ variable "batch_additional_ingress_cidr_blocks" {
   description = "any additional cidr blocks to apply to batch ingress rules"
   default     = []
 }
+
+variable "nextflow_bucket_arn" {
+  type        = string
+  default     = ""
+  description = "description"
+
+  validation {
+    condition     = var.nextflow_bucket_arn == "" || length(regexall("^arn:aws:s3:::[a-zA-Z0-9.\\-]{1,255}$", var.nextflow_bucket_arn)) > 0
+    error_message = "nextflow_bucket_arn must be a valid arn"
+  }
+
+}
