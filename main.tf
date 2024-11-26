@@ -8,8 +8,7 @@ locals {
     local.eip_ip,
     var.batch_additional_ingress_cidr_blocks
   )
-  create_s3_iam = var.create_bucket || var.nextflow_bucket_arn != "" ? [1] : []
-  bucket_arn    = var.create_bucket ? module.s3-bucket.s3_bucket_arn : var.nextflow_bucket_arn
+  create_s3_iam = var.create_bucket ? [1] : []
 }
 
 

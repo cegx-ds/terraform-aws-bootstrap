@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "main" {
         "s3:ListBucket",
       ]
 
-      resources = [local.bucket_arn]
+      resources = [module.s3-bucket.s3_bucket_arn]
     }
   }
 
