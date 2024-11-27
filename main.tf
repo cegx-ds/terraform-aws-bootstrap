@@ -8,7 +8,8 @@ locals {
     local.eip_ip,
     var.batch_additional_ingress_cidr_blocks
   )
-  create_s3_iam = var.create_bucket ? [1] : []
+  create_s3_iam       = var.create_bucket ? [1] : []
+  existing_bucket_iam = var.existing_bucket_iam != "" ? [1] : []
 }
 
 
@@ -30,6 +31,11 @@ data "aws_ami" "default" {
 
 data "aws_subnet" "provided" {
   id = var.subnet_id
+}
+
+data "aws_s3_bucket" "provided" {
+  count  = var.existing_bucket_name != "" ? 1 : 0
+  bucket = var.existing_bucket_name
 }
 
 module "security_group" {

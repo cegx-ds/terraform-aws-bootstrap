@@ -44,6 +44,29 @@ data "aws_iam_policy_document" "main" {
     }
   }
 
+  dynamic "statement" {
+    #checkov:skip=CKV_AWS_108:Allow any bucket
+    #checkov:skip=CKV_AWS_111:Allow any bucket
+    #checkov:skip=CKV_AWS_356:IAM policies documents allow "*"
+    for_each = toset(local.existing_bucket_iam)
+    content {
+      effect = "Allow"
+
+      actions = [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListObjectsV2",
+        "s3:ListBucket",
+      ]
+
+      resources = [
+        "arn:aws:s3:::*/*",
+      data.aws_s3_bucket.arn, ]
+    }
+  }
+
+
   statement {
     #checkov:skip=CKV_AWS_356:IAM policies documents allow "*"
     effect = "Allow"
