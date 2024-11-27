@@ -9,7 +9,7 @@ locals {
     var.batch_additional_ingress_cidr_blocks
   )
   create_s3_iam       = var.create_bucket ? [1] : []
-  existing_bucket_iam = var.existing_bucket_iam != "" ? [1] : []
+  existing_bucket_iam = var.existing_bucket_name != "" ? [1] : []
 }
 
 
