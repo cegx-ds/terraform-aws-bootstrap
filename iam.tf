@@ -62,7 +62,7 @@ data "aws_iam_policy_document" "main" {
 
       resources = [
         "arn:aws:s3:::*/*",
-      data.aws_s3_bucket.arn, ]
+      data.aws_s3_bucket.provided.arn, ]
     }
   }
 
