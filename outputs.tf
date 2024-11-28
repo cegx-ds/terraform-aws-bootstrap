@@ -64,11 +64,11 @@ output "ssh_user" {
 }
 
 output "bucket_arn" {
-  value = module.s3-bucket.0.s3_bucket_arn
+  value = var.create_bucket ? module.s3-bucket.0.s3_bucket_arn : "n/a"
 }
 
 output "bucket_id" {
-  value = module.s3-bucket.0.s3_bucket_id
+  value = var.create_bucket ? module.s3-bucket.0.s3_bucket_id : "n/a"
 }
 
 output "private_key_filename" {

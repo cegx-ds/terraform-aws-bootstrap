@@ -39,7 +39,7 @@ data "aws_iam_policy_document" "main" {
       ]
 
       resources = [
-        "arn:aws:s3:::*/*",
+        "arn:aws:s3:::${module.s3-bucket[0].s3_bucket_id}/*",
       module.s3-bucket[0].s3_bucket_arn, ]
     }
   }
@@ -61,8 +61,8 @@ data "aws_iam_policy_document" "main" {
       ]
 
       resources = [
-        "arn:aws:s3:::*/*",
-      data.aws_s3_bucket.provided[0].arn, ]
+        "arn:aws:s3:::${var.existing_bucket_name}/*",
+      "arn:aws:s3:::${var.existing_bucket_name}", ]
     }
   }
 

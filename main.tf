@@ -33,11 +33,6 @@ data "aws_subnet" "provided" {
   id = var.subnet_id
 }
 
-data "aws_s3_bucket" "provided" {
-  count  = var.existing_bucket_name != "" ? 1 : 0
-  bucket = var.existing_bucket_name
-}
-
 module "security_group" {
   source                   = "terraform-aws-modules/security-group/aws"
   version                  = "5.1.0"
