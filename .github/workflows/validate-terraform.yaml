@@ -1,11 +1,13 @@
 #
+# Copyright (C) 2024 Biomodal Ltd. All rights reserved.
+#
+#
 # Copyright (C) 2023 Cambridge Epigenetix. All rights reserved.
 #
 name: Validate Terraform
 
 on:
   pull_request:
-    types: [opened, edited, reopened]
 
 jobs:
   run-terraform-validation:
