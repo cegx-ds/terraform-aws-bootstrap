@@ -73,6 +73,7 @@ data "aws_iam_policy_document" "main" {
 
     actions = [
       "ecr:BatchGetImage",
+      "ecr:BatchCheckLayerAvailability",
       "ecr:DescribeImages",
       "ecr:DescribeImageScanFindings",
       "ecr:DescribeRepositories",
