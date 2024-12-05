@@ -210,6 +210,13 @@ variable "create_bucket" {
   description = "Whether to create a Nextflow bucket"
 }
 
+variable "existing_bucket_name" {
+  type        = string
+  default     = ""
+  description = "Can be provided along with create bucket variable. Ensures policy for S3 covers existing bucket access"
+}
+
+
 variable "bucket_force_destroy" {
   type        = bool
   default     = true

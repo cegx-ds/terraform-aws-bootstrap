@@ -21,95 +21,69 @@ data "aws_iam_policy_document" "default" {
 }
 
 data "aws_iam_policy_document" "main" {
-  statement {
-    #checkov:skip=CKV_AWS_356:IAM policies documents allow "*"
-    effect = "Allow"
 
-    actions = [
-      "ssm:DescribeAssociation",
-      "ssm:GetDeployablePatchSnapshotForInstance",
-      "ssm:GetDocument",
-      "ssm:DescribeDocument",
-      "ssm:GetManifest",
-      "ssm:GetParameter",
-      "ssm:GetParameters",
-      "ssm:ListAssociations",
-      "ssm:ListInstanceAssociations",
-      "ssm:PutInventory",
-      "ssm:PutComplianceItems",
-      "ssm:PutConfigurePackageResult",
-      "ssm:UpdateAssociationStatus",
-      "ssm:UpdateInstanceAssociationStatus",
-      "ssm:UpdateInstanceInformation"
-    ]
-
-    resources = ["*"]
-  }
-
-  statement {
-    #checkov:skip=CKV_AWS_356:IAM policies documents allow "*"
-    effect = "Allow"
-
-    actions = [
-      "ssmmessages:CreateControlChannel",
-      "ssmmessages:CreateDataChannel",
-      "ssmmessages:OpenControlChannel",
-      "ssmmessages:OpenDataChannel"
-    ]
-
-    resources = ["*"]
-  }
-
-  statement {
-    #checkov:skip=CKV_AWS_356:IAM policies documents allow "*"
-    effect = "Allow"
-
-    actions = [
-      "ec2messages:AcknowledgeMessage",
-      "ec2messages:DeleteMessage",
-      "ec2messages:FailMessage",
-      "ec2messages:GetEndpoint",
-      "ec2messages:GetMessages",
-      "ec2messages:SendReply",
-    ]
-
-    resources = ["*"]
-  }
-
-  statement {
+  dynamic "statement" {
     #checkov:skip=CKV_AWS_108:Allow any bucket
     #checkov:skip=CKV_AWS_111:Allow any bucket
     #checkov:skip=CKV_AWS_356:IAM policies documents allow "*"
-    effect = "Allow"
+    for_each = toset(local.create_s3_iam)
+    content {
+      effect = "Allow"
 
-    actions = [
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:DeleteObject",
-      "s3:ListObjectsV2",
-      "s3:ListBucket",
-    ]
+      actions = [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListObjectsV2",
+        "s3:ListBucket",
+      ]
 
-    resources = ["*"]
+      resources = [
+        "arn:aws:s3:::${module.s3-bucket[0].s3_bucket_id}/*",
+      module.s3-bucket[0].s3_bucket_arn, ]
+    }
   }
+
+  dynamic "statement" {
+    #checkov:skip=CKV_AWS_108:Allow any bucket
+    #checkov:skip=CKV_AWS_111:Allow any bucket
+    #checkov:skip=CKV_AWS_356:IAM policies documents allow "*"
+    for_each = toset(local.existing_bucket_iam)
+    content {
+      effect = "Allow"
+
+      actions = [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListObjectsV2",
+        "s3:ListBucket",
+      ]
+
+      resources = [
+        "arn:aws:s3:::${var.existing_bucket_name}/*",
+      "arn:aws:s3:::${var.existing_bucket_name}", ]
+    }
+  }
+
 
   statement {
     #checkov:skip=CKV_AWS_356:IAM policies documents allow "*"
     effect = "Allow"
 
     actions = [
-      "ecr:GetAuthorizationToken",
-      "ecr:BatchCheckLayerAvailability",
-      "ecr:GetDownloadUrlForLayer",
-      "ecr:GetRepositoryPolicy",
-      "ecr:DescribeRepositories",
-      "ecr:ListImages",
-      "ecr:DescribeImages",
       "ecr:BatchGetImage",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:DescribeImages",
+      "ecr:DescribeImageScanFindings",
+      "ecr:DescribeRepositories",
+      "ecr:GetAuthorizationToken",
+      "ecr:GetDownloadUrlForLayer",
       "ecr:GetLifecyclePolicy",
       "ecr:GetLifecyclePolicyPreview",
+      "ecr:GetRepositoryPolicy",
+      "ecr:ListImages",
       "ecr:ListTagsForResource",
-      "ecr:DescribeImageScanFindings",
       "ecr:CreateRepository",
       "ecr:PutImage",
       "ecr:InitiateLayerUpload",
@@ -127,16 +101,15 @@ data "aws_iam_policy_document" "main" {
     effect = "Allow"
 
     actions = [
-      "batch:DescribeJobQueues",
-      "batch:CancelJob",
-      "batch:SubmitJob",
-      "batch:ListJobs",
       "batch:DescribeComputeEnvironments",
-      "batch:TerminateJob",
-      "batch:DescribeJobs",
-      "batch:RegisterJobDefinition",
       "batch:DescribeJobDefinitions",
+      "batch:DescribeJobQueues",
+      "batch:DescribeJobs",
+      "batch:ListJobs",
+      "batch:RegisterJobDefinition",
+      "batch:SubmitJob",
       "batch:TagResource",
+      "batch:TerminateJob",
     ]
 
     resources = [
