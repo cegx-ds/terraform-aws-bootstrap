@@ -28,6 +28,6 @@ jobs:
 
       - name: terraform-validate
         run: |
-          terraform init
+          terraform init -upgrade -backend=false
           terraform fmt -write=false
           terraform validate
