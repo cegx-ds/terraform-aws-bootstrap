@@ -9,7 +9,7 @@
 module "batch_security_group" {
   #checkov:skip=CKV_TF_1:Ensure Terraform module sources use a commit hash in GitHub
   source  = "terraform-aws-modules/security-group/aws"
-  version = "5.1.0"
+  version = "5.3.0"
   count   = var.deploy_batch ? 1 : 0
 
   name        = "${var.name}-batch"
