@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2024 Biomodal Ltd. All rights reserved.
+# Copyright (C) 2024-2025 Biomodal Ltd. All rights reserved.
 #
 #
 # Copyright (C) 2023 Cambridge Epigenetix. All rights reserved.
@@ -24,7 +24,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_wrapper: false
-          terraform_version: 1.5.4
+          terraform_version: 1.9.8
 
       - name: terraform-validate
         run: |
