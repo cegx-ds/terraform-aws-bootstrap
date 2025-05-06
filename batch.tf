@@ -9,7 +9,7 @@
 module "batch_security_group" {
   #checkov:skip=CKV_TF_1:Ensure Terraform module sources use a commit hash in GitHub
   source  = "terraform-aws-modules/security-group/aws"
-  version = "5.1.0"
+  version = "5.3.0"
   count   = var.deploy_batch ? 1 : 0
 
   name        = "${var.name}-batch"
@@ -87,11 +87,15 @@ resource "aws_batch_compute_environment" "this" {
 #
 
 resource "aws_batch_job_queue" "this" {
-  count                = var.deploy_batch ? 1 : 0
-  name                 = "${var.name}-job-queue"
-  state                = "ENABLED"
-  priority             = 1
-  compute_environments = [aws_batch_compute_environment.this[count.index].arn]
+  count    = var.deploy_batch ? 1 : 0
+  name     = "${var.name}-job-queue"
+  state    = "ENABLED"
+  priority = 1
+
+  compute_environment_order {
+    order               = 1
+    compute_environment = aws_batch_compute_environment.this[count.index].arn
+  }
 
   tags = var.tags
 }
