@@ -134,6 +134,21 @@ data "aws_iam_policy_document" "main" {
       "*"
     ]
   }
+
+  statement {
+    #checkov:skip=CKV_AWS_356:IAM policies documents allow "*"
+    effect = "Allow"
+
+    actions = [
+      "logs:GetLogEvents",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+    ]
+
+    resources = [
+      "*"
+    ]
+  }
 }
 
 resource "aws_iam_instance_profile" "default" {
