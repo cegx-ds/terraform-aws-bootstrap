@@ -49,10 +49,10 @@ resource "aws_launch_template" "this" {
 
 resource "aws_batch_compute_environment" "this" {
 
-  count                    = var.deploy_batch ? 1 : 0
-  compute_environment_name = var.name
-  service_role             = "arn:aws:iam::${var.account_id}:role/aws-service-role/batch.amazonaws.com/AWSServiceRoleForBatch"
-  type                     = "MANAGED"
+  count        = var.deploy_batch ? 1 : 0
+  name         = var.name
+  service_role = "arn:aws:iam::${var.account_id}:role/aws-service-role/batch.amazonaws.com/AWSServiceRoleForBatch"
+  type         = "MANAGED"
 
   compute_resources {
     type                = "SPOT"
