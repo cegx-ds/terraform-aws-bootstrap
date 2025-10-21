@@ -180,7 +180,7 @@ No requirements.
 | Name | Source | Version |
 |------|--------|---------|
 | batch_security_group | terraform-aws-modules/security-group/aws | 5.3.0 |
-| s3-bucket | terraform-aws-modules/s3-bucket/aws | ~> 4.4 |
+| s3-bucket | terraform-aws-modules/s3-bucket/aws | ~> 5.0 |
 | security_group | terraform-aws-modules/security-group/aws | 5.3.0 |
 
 ## Resources

@@ -1,7 +1,7 @@
 module "s3-bucket" {
   #checkov:skip=CKV_TF_1:Ensure Terraform module sources use a commit hash in GitHub
   source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "~> 4.4"
+  version = "~> 5.0"
 
   count                   = var.create_bucket ? 1 : 0
   bucket_prefix           = var.name
