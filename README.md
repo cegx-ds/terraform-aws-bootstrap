@@ -5,19 +5,28 @@
 
 ## Overview
 
-Public module for use within the cli bootstrapping tool.
-Deploys an ec2 bastion instance for running pipelines
-remotely. Also deploys an AWS batch compute environment
-(optional but defaults to `true`).
+This Terraform module deploys a complete AWS infrastructure for running bioinformatics pipelines and computational workloads. It creates an EC2 bastion instance with optional AWS Batch compute environment for scalable job execution.
 
-Please see CLI documentation for more details on each resource
-deployed, however below is a summary:
+### Key Features
 
-* ec2 bastion instance
-* (optional) S3 bucket for Nextflow backend
-* IAM policy for instance
-* (optional) AWS Batch compute environment
-* SSH key pair for ssh access and ingress/egress rules for ssh access
+* **EC2 Bastion Instance**: Configurable compute instance for pipeline management and job submission
+* **AWS Batch Environment** (optional): Managed compute environment with SPOT instances for cost-effective job execution
+* **S3 Storage** (optional): Nextflow-optimized bucket with lifecycle policies for workflow artifacts
+* **IAM Roles & Policies**: Comprehensive permissions for ECR, Batch, ECS, S3, and CloudWatch Logs
+* **SSH Key Management**: Automatic generation and management of SSH key pairs
+* **Security Groups**: Configurable ingress/egress rules for bastion and batch resources
+* **Elastic IP** (optional): Static IP addressing for the bastion host
+
+### Architecture
+
+The module deploys the following resources when fully configured:
+
+* **Compute**: EC2 instance with configurable instance type, EBS volumes, and metadata options
+* **Batch**: AWS Batch compute environment with launch template, job queue, and security group
+* **Storage**: S3 bucket with 14-day lifecycle policy for `nf-work/` prefix
+* **Networking**: Security groups with customizable rules, VPC integration, and optional EIP
+* **Identity**: IAM role, instance profile, and policies for AWS service access
+* **SSH**: TLS-generated key pair with local file storage for private/public keys
 
 ## Tests
 
@@ -25,7 +34,122 @@ deployed, however below is a summary:
 
 ## Usage
 
-todo
+### Basic Example - EC2 Bastion Only
+
+```hcl
+module "bootstrap" {
+  source = "github.com/cegx-ds/terraform-aws-bootstrap"
+
+  # Required variables
+  name       = "bioinformatics-bastion"
+  account_id = "123456789012"
+  vpc_id     = "vpc-0123456789abcdef0"
+  subnet_id  = "subnet-0123456789abcdef0"
+
+  # Optional configurations
+  instance_type = "t3.medium"
+  tags = {
+    Environment = "production"
+    Project     = "genomics-pipeline"
+  }
+}
+```
+
+### Full Example - With AWS Batch and S3
+
+```hcl
+module "bootstrap" {
+  source = "github.com/cegx-ds/terraform-aws-bootstrap"
+
+  # Required variables
+  name       = "genomics-platform"
+  account_id = "123456789012"
+  vpc_id     = "vpc-0123456789abcdef0"
+  subnet_id  = "subnet-0123456789abcdef0"
+
+  # Enable AWS Batch for scalable compute
+  deploy_batch = true
+  batch_additional_ingress_cidr_blocks = ["10.0.0.0/16"]
+
+  # Enable S3 bucket for Nextflow work directory
+  create_bucket        = true
+  bucket_force_destroy = true
+
+  # EC2 instance configuration
+  instance_type                    = "t3.large"
+  root_block_device_volume_size    = 100
+  ebs_block_device_volume_size     = 500
+  ebs_device_name                  = "/dev/sdh"
+
+  # Enable Elastic IP for stable addressing
+  eip_enabled = true
+
+  # Security configuration
+  security_group_rules = [
+    {
+      type        = "egress"
+      from_port   = 0
+      to_port     = 0
+      protocol    = -1
+      cidr_blocks = "0.0.0.0/0"
+      description = "Allow all outbound traffic"
+    },
+    {
+      type        = "ingress"
+      protocol    = "tcp"
+      from_port   = 22
+      to_port     = 22
+      cidr_blocks = "203.0.113.0/24"  # Replace with your IP range
+      description = "SSH access from corporate network"
+    }
+  ]
+
+  # Tags
+  tags = {
+    Environment = "production"
+    Project     = "genomics-pipeline"
+    ManagedBy   = "terraform"
+  }
+}
+
+# Outputs
+output "bastion_public_ip" {
+  value = module.bootstrap.public_ip
+}
+
+output "ssh_key_path" {
+  value = module.bootstrap.private_key_filename
+}
+
+output "s3_bucket_name" {
+  value = module.bootstrap.bucket_id
+}
+```
+
+### Connecting to the Bastion
+
+After deployment, connect to your bastion instance:
+
+```bash
+# SSH key is automatically generated and saved locally
+ssh -i .ssh/<instance-name>.pem ec2-user@<public-ip>
+```
+
+### Using with Existing S3 Bucket
+
+```hcl
+module "bootstrap" {
+  source = "github.com/cegx-ds/terraform-aws-bootstrap"
+
+  name       = "pipeline-runner"
+  account_id = "123456789012"
+  vpc_id     = "vpc-0123456789abcdef0"
+  subnet_id  = "subnet-0123456789abcdef0"
+
+  # Use existing S3 bucket
+  existing_bucket_name = "my-existing-nextflow-bucket"
+}
+```
 
 ## Devcontainer
 
@@ -47,17 +171,17 @@ No requirements.
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
-| <a name="provider_local"></a> [local](#provider\_local) | n/a |
-| <a name="provider_tls"></a> [tls](#provider\_tls) | n/a |
+| aws | n/a |
+| local | n/a |
+| tls | n/a |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_batch_security_group"></a> [batch\_security\_group](#module\_batch\_security\_group) | terraform-aws-modules/security-group/aws | 5.1.0 |
-| <a name="module_s3-bucket"></a> [s3-bucket](#module\_s3-bucket) | terraform-aws-modules/s3-bucket/aws | 3.15.1 |
-| <a name="module_security_group"></a> [security\_group](#module\_security\_group) | terraform-aws-modules/security-group/aws | 5.1.0 |
+| batch_security_group | terraform-aws-modules/security-group/aws | 5.3.0 |
+| s3-bucket | terraform-aws-modules/s3-bucket/aws | 5.8.2 |
+| security_group | terraform-aws-modules/security-group/aws | 5.3.0 |
 
 ## Resources
 
@@ -84,58 +208,82 @@ No requirements.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_account_id"></a> [account\_id](#input\_account\_id) | id for AWS account to deploy into | `string` | n/a | yes |
-| <a name="input_ami"></a> [ami](#input\_ami) | AMI to use for the instance. Setting this will ignore `ami_filter` and `ami_owners`. | `string` | `null` | no |
-| <a name="input_ami_filter"></a> [ami\_filter](#input\_ami\_filter) | List of maps used to create the AMI filter for the action runner AMI. | `map(list(string))` | <pre>{<br>  "name": [<br>    "amzn2-ami-hvm-2.*-x86_64-ebs"<br>  ]<br>}</pre> | no |
-| <a name="input_ami_owners"></a> [ami\_owners](#input\_ami\_owners) | The list of owners used to select the AMI of action runner instances. | `list(string)` | <pre>[<br>  "amazon"<br>]</pre> | no |
-| <a name="input_batch_additional_ingress_cidr_blocks"></a> [batch\_additional\_ingress\_cidr\_blocks](#input\_batch\_additional\_ingress\_cidr\_blocks) | any additional cidr blocks to apply to batch ingress rules | `list(string)` | `[]` | no |
-| <a name="input_bucket_force_destroy"></a> [bucket\_force\_destroy](#input\_bucket\_force\_destroy) | Setting force destroy on Nextflow bucket | `bool` | `true` | no |
-| <a name="input_create_bucket"></a> [create\_bucket](#input\_create\_bucket) | Whether to create a Nextflow bucket | `bool` | `false` | no |
-| <a name="input_deploy_batch"></a> [deploy\_batch](#input\_deploy\_batch) | Whether to deploy a batch pipeline and associated resources | `bool` | `false` | no |
-| <a name="input_disable_api_termination"></a> [disable\_api\_termination](#input\_disable\_api\_termination) | Enable EC2 Instance Termination Protection | `bool` | `false` | no |
-| <a name="input_ebs_block_device_encrypted"></a> [ebs\_block\_device\_encrypted](#input\_ebs\_block\_device\_encrypted) | Whether to encrypt the EBS block device | `bool` | `true` | no |
-| <a name="input_ebs_block_device_volume_size"></a> [ebs\_block\_device\_volume\_size](#input\_ebs\_block\_device\_volume\_size) | The volume size (in GiB) to provision for the EBS block device. Creation skipped if size is 0 | `number` | `0` | no |
-| <a name="input_ebs_delete_on_termination"></a> [ebs\_delete\_on\_termination](#input\_ebs\_delete\_on\_termination) | Whether the EBS volume should be destroyed on instance termination | `bool` | `true` | no |
-| <a name="input_ebs_device_name"></a> [ebs\_device\_name](#input\_ebs\_device\_name) | The name of the EBS block device to mount on the instance | `string` | `"/dev/sdh"` | no |
-| <a name="input_eip_enabled"></a> [eip\_enabled](#input\_eip\_enabled) | Whether an eip is enabled for the bastion host | `string` | `false` | no |
-| <a name="input_instance_profile"></a> [instance\_profile](#input\_instance\_profile) | A pre-defined profile to attach to the instance (default is to build our own) | `string` | `""` | no |
-| <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | Bastion instance type | `string` | `"t2.micro"` | no |
-| <a name="input_key_name"></a> [key\_name](#input\_key\_name) | Key name | `string` | `""` | no |
-| <a name="input_metadata_http_endpoint_enabled"></a> [metadata\_http\_endpoint\_enabled](#input\_metadata\_http\_endpoint\_enabled) | Whether the metadata service is available | `bool` | `true` | no |
-| <a name="input_metadata_http_put_response_hop_limit"></a> [metadata\_http\_put\_response\_hop\_limit](#input\_metadata\_http\_put\_response\_hop\_limit) | The desired HTTP PUT response hop limit (between 1 and 64) for instance metadata requests. | `number` | `1` | no |
-| <a name="input_metadata_http_tokens_required"></a> [metadata\_http\_tokens\_required](#input\_metadata\_http\_tokens\_required) | Whether or not the metadata service requires session tokens, also referred to as Instance Metadata Service Version 2. | `bool` | `true` | no |
-| <a name="input_monitoring"></a> [monitoring](#input\_monitoring) | Launched EC2 instance will have detailed monitoring enabled | `bool` | `true` | no |
-| <a name="input_name"></a> [name](#input\_name) | name to give instance. Also uses this value for naming all other related resources in this module | `string` | n/a | yes |
-| <a name="input_root_block_device_encrypted"></a> [root\_block\_device\_encrypted](#input\_root\_block\_device\_encrypted) | Whether to encrypt the root block device | `bool` | `true` | no |
-| <a name="input_root_block_device_volume_size"></a> [root\_block\_device\_volume\_size](#input\_root\_block\_device\_volume\_size) | The volume size (in GiB) to provision for the root block device. It cannot be smaller than the AMI it refers to. | `number` | `8` | no |
-| <a name="input_security_group_description"></a> [security\_group\_description](#input\_security\_group\_description) | The Security Group description. | `string` | `"Bastion host security group"` | no |
-| <a name="input_security_group_enabled"></a> [security\_group\_enabled](#input\_security\_group\_enabled) | Whether to create default Security Group for bastion host. | `bool` | `true` | no |
-| <a name="input_security_group_rules"></a> [security\_group\_rules](#input\_security\_group\_rules) | A list of maps of Security Group rules.<br>The values of map is fully complated with `aws_security_group_rule` resource.<br>To get more info see https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule . | `list(any)` | <pre>[<br>  {<br>    "cidr_blocks": "0.0.0.0/0",<br>    "description": "Allow all outbound traffic",<br>    "from_port": 0,<br>    "protocol": -1,<br>    "to_port": 0,<br>    "type": "egress"<br>  },<br>  {<br>    "cidr_blocks": "0.0.0.0/0",<br>    "description": "Allow all inbound to SSH",<br>    "from_port": 22,<br>    "protocol": "tcp",<br>    "to_port": 22,<br>    "type": "ingress"<br>  }<br>]</pre> | no |
-| <a name="input_security_group_use_name_prefix"></a> [security\_group\_use\_name\_prefix](#input\_security\_group\_use\_name\_prefix) | Whether to create a default Security Group with unique name beginning with the normalized prefix. | `bool` | `false` | no |
-| <a name="input_security_groups"></a> [security\_groups](#input\_security\_groups) | A list of Security Group IDs to associate with bastion host. | `list(string)` | `[]` | no |
-| <a name="input_ssh_key_algorithm"></a> [ssh\_key\_algorithm](#input\_ssh\_key\_algorithm) | n/a | `string` | `"RSA"` | no |
-| <a name="input_ssh_public_key_path"></a> [ssh\_public\_key\_path](#input\_ssh\_public\_key\_path) | dir for public key | `string` | `".ssh"` | no |
-| <a name="input_ssh_user"></a> [ssh\_user](#input\_ssh\_user) | Needed to pass to output for backwards compatibility | `string` | `""` | no |
-| <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | id for subnet to launch instance on | `string` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | map of tags to apply to all resources | `map(any)` | `{}` | no |
-| <a name="input_user_data_base64"></a> [user\_data\_base64](#input\_user\_data\_base64) | The Base64-encoded user data to provide when launching the instances. If this is set then `user_data` will not be used. | `string` | `""` | no |
-| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC ID | `string` | n/a | yes |
+| account_id | id for AWS account to deploy into | `string` | n/a | yes |
+| ami | AMI to use for the instance. Setting this will ignore `ami_filter` and `ami_owners`. | `string` | `null` | no |
+| ami_filter | List of maps used to create the AMI filter for the action runner AMI. | `map(list(string))` | `{"name": ["amzn2-ami-hvm-2.*-x86_64-ebs"]}` | no |
+| ami_owners | The list of owners used to select the AMI of action runner instances. | `list(string)` | `["amazon"]` | no |
+| batch_additional_ingress_cidr_blocks | any additional cidr blocks to apply to batch ingress rules | `list(string)` | `[]` | no |
+| bucket_force_destroy | Setting force destroy on Nextflow bucket | `bool` | `true` | no |
+| create_bucket | Whether to create a Nextflow bucket | `bool` | `false` | no |
+| deploy_batch | Whether to deploy a batch pipeline and associated resources | `bool` | `false` | no |
+| disable_api_termination | Enable EC2 Instance Termination Protection | `bool` | `false` | no |
+| ebs_block_device_encrypted | Whether to encrypt the EBS block device | `bool` | `true` | no |
+| ebs_block_device_volume_size | The volume size (in GiB) to provision for the EBS block device. Creation skipped if size is 0 | `number` | `0` | no |
+| ebs_delete_on_termination | Whether the EBS volume should be destroyed on instance termination | `bool` | `true` | no |
+| ebs_device_name | The name of the EBS block device to mount on the instance | `string` | `"/dev/sdh"` | no |
+| eip_enabled | Whether an eip is enabled for the bastion host | `string` | `false` | no |
+| existing_bucket_name | Can be provided along with create bucket variable. Ensures policy for S3 covers existing bucket access | `string` | `""` | no |
+| instance_profile | A pre-defined profile to attach to the instance (default is to build our own) | `string` | `""` | no |
+| instance_type | Bastion instance type | `string` | `"t2.micro"` | no |
+| key_name | Key name | `string` | `""` | no |
+| metadata_http_endpoint_enabled | Whether the metadata service is available | `bool` | `true` | no |
+| metadata_http_put_response_hop_limit | The desired HTTP PUT response hop limit (between 1 and 64) for instance metadata requests. | `number` | `1` | no |
+| metadata_http_tokens_required | Whether or not the metadata service requires session tokens, also referred to as Instance Metadata Service Version 2. | `bool` | `true` | no |
+| monitoring | Launched EC2 instance will have detailed monitoring enabled | `bool` | `true` | no |
+| name | name to give instance. Also uses this value for naming all other related resources in this module | `string` | n/a | yes |
+| root_block_device_encrypted | Whether to encrypt the root block device | `bool` | `true` | no |
+| root_block_device_volume_size | The volume size (in GiB) to provision for the root block device. It cannot be smaller than the AMI it refers to. | `number` | `8` | no |
+| security_group_description | The Security Group description. | `string` | `"Bastion host security group"` | no |
+| security_group_enabled | Whether to create default Security Group for bastion host. | `bool` | `true` | no |
+| security_group_rules | A list of maps of Security Group rules. The values of map is fully complated with `aws_security_group_rule` resource. See [AWS docs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | `list(any)` | See default rules below | no |
+| security_group_use_name_prefix | Whether to create a default Security Group with unique name beginning with the normalized prefix. | `bool` | `false` | no |
+| security_groups | A list of Security Group IDs to associate with bastion host. | `list(string)` | `[]` | no |
+| ssh_key_algorithm | SSH key algorithm | `string` | `"RSA"` | no |
+| ssh_public_key_path | dir for public key | `string` | `".ssh"` | no |
+| ssh_user | Needed to pass to output for backwards compatibility | `string` | `""` | no |
+| subnet_id | id for subnet to launch instance on | `string` | n/a | yes |
+| tags | map of tags to apply to all resources | `map(any)` | `{}` | no |
+| user_data_base64 | The Base64-encoded user data to provide when launching the instances. If this is set then `user_data` will not be used. | `string` | `""` | no |
+| vpc_id | VPC ID | `string` | n/a | yes |
+
+**Default security_group_rules:**
+
+```json
+[
+  {
+    "type": "egress",
+    "from_port": 0,
+    "to_port": 0,
+    "protocol": -1,
+    "cidr_blocks": "0.0.0.0/0",
+    "description": "Allow all outbound traffic"
+  },
+  {
+    "type": "ingress",
+    "protocol": "tcp",
+    "from_port": 22,
+    "to_port": 22,
+    "cidr_blocks": "0.0.0.0/0",
+    "description": "Allow all inbound to SSH"
+  }
+]
+```
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_arn"></a> [arn](#output\_arn) | ARN of the instance |
-| <a name="output_bucket_arn"></a> [bucket\_arn](#output\_bucket\_arn) | n/a |
-| <a name="output_bucket_id"></a> [bucket\_id](#output\_bucket\_id) | n/a |
-| <a name="output_id"></a> [id](#output\_id) | Disambiguated ID of the instance |
-| <a name="output_instance_id"></a> [instance\_id](#output\_instance\_id) | Instance ID |
-| <a name="output_private_dns"></a> [private\_dns](#output\_private\_dns) | Private DNS of instance |
-| <a name="output_private_ip"></a> [private\_ip](#output\_private\_ip) | Private IP of the instance |
-| <a name="output_private_key_filename"></a> [private\_key\_filename](#output\_private\_key\_filename) | n/a |
-| <a name="output_public_ip"></a> [public\_ip](#output\_public\_ip) | Public IP of the instance (or EIP) |
-| <a name="output_security_group_arn"></a> [security\_group\_arn](#output\_security\_group\_arn) | Bastion host Security Group ARN |
-| <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | Bastion host Security Group ID |
-| <a name="output_security_group_ids"></a> [security\_group\_ids](#output\_security\_group\_ids) | IDs on the AWS Security Groups associated with the instance |
-| <a name="output_security_group_name"></a> [security\_group\_name](#output\_security\_group\_name) | Bastion host Security Group name |
-| <a name="output_ssh_user"></a> [ssh\_user](#output\_ssh\_user) | SSH user |
+| arn | ARN of the instance |
+| bucket_arn | S3 bucket ARN (if created) |
+| bucket_id | S3 bucket ID (if created) |
+| id | Disambiguated ID of the instance |
+| instance_id | Instance ID |
+| private_dns | Private DNS of instance |
+| private_ip | Private IP of the instance |
+| private_key_filename | Path to the generated private key file |
+| public_ip | Public IP of the instance (or EIP) |
+| security_group_arn | Bastion host Security Group ARN |
+| security_group_id | Bastion host Security Group ID |
+| security_group_ids | IDs on the AWS Security Groups associated with the instance |
+| security_group_name | Bastion host Security Group name |
+| ssh_user | SSH user |

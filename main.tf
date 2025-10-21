@@ -35,7 +35,7 @@ data "aws_subnet" "provided" {
 
 module "security_group" {
   source                   = "terraform-aws-modules/security-group/aws"
-  version                  = "5.1.0"
+  version                  = "5.3.0"
   name                     = "${var.name}-sg"
   use_name_prefix          = var.security_group_use_name_prefix
   ingress_with_cidr_blocks = [for rule in var.security_group_rules : rule if rule.type == "ingress"]
@@ -49,7 +49,7 @@ resource "aws_instance" "default" {
   #bridgecrew:skip=BC_AWS_GENERAL_31: Skipping `Ensure Instance Metadata Service Version 1 is not enabled` check until BridgeCrew support condition evaluation. See https://github.com/bridgecrewio/checkov/issues/793
   ami                     = coalesce(var.ami, join("", data.aws_ami.default.*.id))
   instance_type           = var.instance_type
-  user_data               = var.user_data_base64
+  user_data_base64        = var.user_data_base64 != "" ? var.user_data_base64 : null
   vpc_security_group_ids  = compact(concat(module.security_group.*.security_group_id, var.security_groups))
   iam_instance_profile    = aws_iam_instance_profile.default.name
   key_name                = aws_key_pair.generated.key_name
